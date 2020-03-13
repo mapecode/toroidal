@@ -55,4 +55,6 @@ void write_numbers(FILE *file, int max){
         fprintf(file,"%.2f,", ((rand() % (MIN - MAX + 1) + MIN) * (drand48() + 1.0)));
     
     fprintf(file,"%.2f", ((rand() % (MIN - MAX + 1) + MIN) * (drand48() + 1.0)));
+
+    fclose(file);
 }
