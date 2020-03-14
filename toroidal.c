@@ -23,10 +23,49 @@
 #define LENGTH_MSG "length"
 #define SIZE_MSG   "size"
 
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-
+void get_data(double *data, int *length);
+void check_data(int var, char *type);
+void send_data(double *data);
+void check_data(int var, char *type);
+void send_data(double *data);
+void toroidal_neighbors(int rank, int neighbors[]);
+void calculate_min(int rank, double num);
 
 int end = FALSE;
+
+int main(int argc, char *argv[]){
+    double *data = malloc(MAX_ITEMS * sizeof(double));
+    int length;
+    int rank, size;
+    double num;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    MPI_Comm_size(MPI_COMM_WORLD,&size);
+
+    if (rank == 0){
+        get_data(data, &length);
+        check_data(length, LENGTH_MSG);
+        check_data(size, SIZE_MSG);
+
+        if (!end)
+            send_data(data);
+    }
+
+    /* Get confirmation to continue from first node */
+    MPI_Bcast(&end,1,MPI_INT,0,MPI_COMM_WORLD);
+        
+    if(!end){
+        /* Wait the number */
+        MPI_Recv(&num, 1, MPI_DOUBLE, 0, MPI_ANY_TAG, MPI_COMM_WORLD, NULL);
+        printf("Rank %d => %.2f\n",rank,num);
+        calculate_min(rank, num);
+    }
+    
+    MPI_Finalize();
+
+    return EXIT_SUCCESS;
+}
 
 void get_data(double *data, int *length){
     /* For load data from datos.dat */
@@ -131,50 +170,16 @@ void calculate_min(int rank, double num){
         /* Rows */
         MPI_Send(&num, 1, MPI_DOUBLE, neighbors[SOUTH], 1, MPI_COMM_WORLD);
         MPI_Recv(&his_num,1,MPI_DOUBLE,neighbors[NORTH],1,MPI_COMM_WORLD,NULL);
-        num = MIN(num,his_num);
+        num = (num < his_num ? num : his_num);
 
         /* Columns */
         MPI_Send(&num, 1, MPI_DOUBLE, neighbors[EAST], 1, MPI_COMM_WORLD);
         MPI_Recv(&his_num,1,MPI_DOUBLE,neighbors[WEST],1,MPI_COMM_WORLD,NULL);
-        num = MIN(num,his_num);
+        num = (num < his_num ? num : his_num);
     }
 
     if(rank == 0){
         printf("\nThe minimum number is: %.2f\n",num);
     }
     
-}
-
-int main(int argc, char *argv[]){
-    double *data = malloc(MAX_ITEMS * sizeof(double));
-    int length;
-    int rank, size;
-    double num;
-
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
-    MPI_Comm_size(MPI_COMM_WORLD,&size);
-
-    if (rank == 0){
-        get_data(data, &length);
-        check_data(length, LENGTH_MSG);
-        check_data(size, SIZE_MSG);
-
-        if (!end)
-            send_data(data);
-    }
-
-    /* Get confirmation to continue from first node */
-    MPI_Bcast(&end,1,MPI_INT,0,MPI_COMM_WORLD);
-        
-    if(!end){
-        /* Wait the number */
-        MPI_Recv(&num, 1, MPI_DOUBLE, 0, MPI_ANY_TAG, MPI_COMM_WORLD, NULL);
-        printf("Rank %d => %.2f\n",rank,num);
-        calculate_min(rank, num);
-    }
-    
-    MPI_Finalize();
-
-    return EXIT_SUCCESS;
 }
