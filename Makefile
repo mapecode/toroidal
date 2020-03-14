@@ -1,10 +1,10 @@
 DIREXE := exec/
-
 MCC := mpicc
 CC := gcc
 RUN := mpirun
+NODES := 16
 
-all : dirs data toroidal solution
+all: dirs data toroidal new_data solution
 
 dirs:
 	mkdir -p $(DIREXE)
@@ -15,9 +15,11 @@ data:
 toroidal:
 	$(MCC) toroidal.c -o $(DIREXE)toroidal
 
-solution:
-	./$(DIREXE)gen_data 16
-	$(RUN) -n 16 ./$(DIREXE)toroidal 
+new_data:
+	./$(DIREXE)gen_data $(NODES)
+
+solution :
+	$(RUN) -n $(NODES) ./$(DIREXE)toroidal 
 
 clean: 
 	rm -rf *~ core $(DIROBJ) $(DIREXE) $(DIRHEA)*~ $(DIRSRC)*~ 
