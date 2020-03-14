@@ -128,12 +128,12 @@ void calculate_min(int rank, double num){
     toroidal_neighbors(rank, neighbors);
 
     for(i=1; i < L; i++){
+        /* Rows */
         MPI_Send(&num, 1, MPI_DOUBLE, neighbors[SOUTH], 1, MPI_COMM_WORLD);
         MPI_Recv(&his_num,1,MPI_DOUBLE,neighbors[NORTH],1,MPI_COMM_WORLD,NULL);
         num = MIN(num,his_num);
-    }
 
-    for(i=1; i < L; i++){
+        /* Columns */
         MPI_Send(&num, 1, MPI_DOUBLE, neighbors[EAST], 1, MPI_COMM_WORLD);
         MPI_Recv(&his_num,1,MPI_DOUBLE,neighbors[WEST],1,MPI_COMM_WORLD,NULL);
         num = MIN(num,his_num);
