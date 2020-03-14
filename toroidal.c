@@ -75,7 +75,7 @@ void get_data(double *data, int *length){
     char *n;
 
     if ((file = fopen(FILE_NAME, "r")) == NULL){
-        fprintf(stderr, "Error opening file.\n");
+        fprintf(stderr, "Error opening file\n");
         end = TRUE; 
     }else{
         *length = 0;
@@ -126,16 +126,16 @@ void toroidal_neighbors(int rank, int neighbors[]){
             3 4
         */
         case 0: /* Lower row */
-            neighbors[NORTH] = rank + L;
-            neighbors[SOUTH] = (L-1) * L + rank;
+            neighbors[SOUTH] = rank + L;
+            neighbors[NORTH] = (L-1) * L + rank;
             break;
         case L-1: /* Uppper row */
-            neighbors[NORTH] = rank % L;
-            neighbors[SOUTH] = rank - L; 
+            neighbors[SOUTH] = rank % L;
+            neighbors[NORTH] = rank - L; 
             break;
         default: /* Central row */
-            neighbors[NORTH] = rank + L;
-            neighbors[SOUTH] = rank - L; 
+            neighbors[SOUTH] = rank + L;
+            neighbors[NORTH] = rank - L; 
             break;
     }
 
