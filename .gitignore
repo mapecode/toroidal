@@ -12,3 +12,10 @@ doc/images/PlazaCR.jpg
 doc/images/UCLM_Logo.pdf
 doc/Memoria.pdf
 doc/Memoria.tex
+*.aux
+*.toc
+*.gz
+*.out
+*.log
+*.blg
+*.bbl
