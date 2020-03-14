@@ -21,6 +21,8 @@
 #define LENGTH_MSG "length"
 #define SIZE_MSG   "size"
 
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
 
 int end = FALSE;
 
@@ -72,10 +74,21 @@ void send_data(double *data){
     free(data);
 }
 
+void toroidal_neighbors(int rank){
+
+}
+
+void calculate_min(int rank, double num){
+    int neighbors[L];
+
+}
+
 int main(int argc, char *argv[]){
     double *data = malloc(MAX_ITEMS*sizeof(double));
     int length;
     int rank, size;
+    double num;
+
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
@@ -85,22 +98,20 @@ int main(int argc, char *argv[]){
         get_data(data, &length);
         check_data(length, LENGTH_MSG);
         check_data(size, SIZE_MSG);
-        /* Broadcast confirmation */
-        MPI_Bcast(&end,1,MPI_INT,0,MPI_COMM_WORLD);
+
         if (!end)
             send_data(data);
-    }else{
-        /* Get confirmation to continue from first node */
-        MPI_Bcast(&end,1,MPI_INT,0,MPI_COMM_WORLD);
-        
-        if(!end){
-            double num;
-
-            /* Wait the number */
-            MPI_Recv(&num, 1, MPI_DOUBLE, 0, MPI_ANY_TAG, MPI_COMM_WORLD, NULL);
-            printf("%.2f\n",num);
-        }
     }
+
+    /* Get confirmation to continue from first node */
+    MPI_Bcast(&end,1,MPI_INT,0,MPI_COMM_WORLD);
+        
+    if(!end){
+        /* Wait the number */
+        MPI_Recv(&num, 1, MPI_DOUBLE, 0, MPI_ANY_TAG, MPI_COMM_WORLD, NULL);
+        printf("Rank %d => %.2f\n",rank,num);
+    }
+    
 
     MPI_Finalize();
 
