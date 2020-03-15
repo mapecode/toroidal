@@ -4,8 +4,8 @@
 #include <mpi.h>
 
 
-#define MAX_ITEMS   1024
 #define L           4
+#define N_NODES     L*L
 
 #define FILE_NAME   "datos.dat"
 
@@ -23,6 +23,8 @@
 #define LENGTH_MSG "length"
 #define SIZE_MSG   "size"
 
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
 void get_data(double *data, int *length);
 void check_data(int var, char *type);
 void send_data(double *data);
@@ -34,7 +36,7 @@ void calculate_min(int rank, double num);
 int end = FALSE;
 
 int main(int argc, char *argv[]){
-    double *data = malloc(MAX_ITEMS * sizeof(double));
+    double *data = malloc(N_NODES * sizeof(double));
     int length;
     int rank, size;
     double num;
@@ -46,10 +48,10 @@ int main(int argc, char *argv[]){
     if (rank == 0){
         get_data(data, &length);
         check_data(length, LENGTH_MSG);
-        check_data(size, SIZE_MSG);
 
-        if (!end)
-            send_data(data);
+        if (!end) check_data(size, SIZE_MSG);
+
+        if (!end) send_data(data);
     }
 
     /* Get confirmation to continue from first node */
@@ -71,7 +73,7 @@ void get_data(double *data, int *length){
     /* For load data from datos.dat */
     
     FILE *file;
-    char *aux = malloc(MAX_ITEMS * sizeof(char));
+    char *aux = malloc(1024 * sizeof(char));
     char *n;
 
     if ((file = fopen(FILE_NAME, "r")) == NULL){
@@ -80,7 +82,8 @@ void get_data(double *data, int *length){
     }else{
         *length = 0;
 
-        fgets(aux, MAX_ITEMS * sizeof(char), file);
+        fscanf(file, "%s", aux);
+        
         fclose(file);
 
         data[(*length)++] = atof(strtok(aux,","));
@@ -97,17 +100,19 @@ void get_data(double *data, int *length){
 void check_data(int var, char *type){
     /* For check length or size */
 
-    if (var != L*L){
+    if (var != N_NODES){
         fprintf(stderr, "Error in data %s\n", type);
         end = TRUE;
     }
 }
 
 void send_data(double *data){
+    /* Send numbers to all the nodes */
+
     double buff_num;
     int i;
 
-    for(i=0; i < L*L; i++){
+    for(i=0; i < N_NODES; i++){
         buff_num = data[i];
         MPI_Send(&buff_num, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
     }
@@ -116,6 +121,8 @@ void send_data(double *data){
 }
 
 void toroidal_neighbors(int rank, int neighbors[]){
+    /* Calculate the neighbors */
+
     int row = rank / L;
     int column = rank % L;
 
@@ -160,6 +167,8 @@ void toroidal_neighbors(int rank, int neighbors[]){
 }
 
 void calculate_min(int rank, double num){
+    /* Calculate the minimum number of all the nodes */
+
     int neighbors[N_NEIGHBORS];
     double his_num;
     int i;
@@ -170,16 +179,15 @@ void calculate_min(int rank, double num){
         /* Rows */
         MPI_Send(&num, 1, MPI_DOUBLE, neighbors[SOUTH], 1, MPI_COMM_WORLD);
         MPI_Recv(&his_num,1,MPI_DOUBLE,neighbors[NORTH],1,MPI_COMM_WORLD,NULL);
-        num = (num < his_num ? num : his_num);
+        num = MIN(num, his_num);
 
         /* Columns */
         MPI_Send(&num, 1, MPI_DOUBLE, neighbors[EAST], 1, MPI_COMM_WORLD);
         MPI_Recv(&his_num,1,MPI_DOUBLE,neighbors[WEST],1,MPI_COMM_WORLD,NULL);
-        num = (num < his_num ? num : his_num);
+        num = MIN(num, his_num);
+
     }
 
-    if(rank == 0){
-        printf("\nThe minimum number is: %.2f\n",num);
-    }
+    if(rank == 0) printf("\nThe minimum number is: %.2f\n",num);
     
 }
