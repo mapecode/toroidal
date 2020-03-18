@@ -60,7 +60,6 @@ int main(int argc, char *argv[]){
     if(!end){
         /* Wait the number */
         MPI_Recv(&num, 1, MPI_DOUBLE, 0, MPI_ANY_TAG, MPI_COMM_WORLD, NULL);
-        printf("Rank %d => %.2f\n",rank,num);
         calculate_min(rank, num);
     }
     
@@ -115,6 +114,7 @@ void send_data(double *data){
     for(i=0; i < N_NODES; i++){
         buff_num = data[i];
         MPI_Send(&buff_num, 1, MPI_DOUBLE, i, 0, MPI_COMM_WORLD);
+        printf("%.2f sended to %d node\n",buff_num, i);
     }
 
     free(data);
